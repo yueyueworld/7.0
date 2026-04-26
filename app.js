@@ -490,23 +490,31 @@ function loadVoices() {
 if (window.speechSynthesis) {
   window.speechSynthesis.onvoiceschanged = loadVoices;
   loadVoices();
-}
-
+}// 语音播报状态锁 修复卡顿
+let isAudioSpeaking = false;
 function speakNPC(text) {
   speakNPCWithRate(text, 0.92);
 }
 
 function speakNPCWithRate(text, rate) {
-  if (!window.speechSynthesis) return;
-  window.speechSynthesis.cancel();
+  if (!window.speechSynthesis|| !text) return;
+  if (isAudioSpeaking) {
+    window.speechSynthesis.cancel();
+  }
   const u = new SpeechSynthesisUtterance(text);
   u.lang = "en-GB";
   u.rate = rate;
   u.pitch = 1.05;
-  const voices = window.speechSynthesis.getVoices();
+  let voices = window.speechSynthesis.getVoices();
+  if (voices.length === 0) {
+    voices = window.speechSynthesis.getVoices();
+  }
   const preferred = voices.find((v) => /en-GB/i.test(v.lang))
     || voices.find((v) => /^en-/i.test(v.lang));
   if (preferred) u.voice = preferred;
+  u.onend = () => isAudioSpeaking = false;
+  u.onerror = () => isAudioSpeaking = false;
+  isAudioSpeaking = true;
   window.speechSynthesis.speak(u);
 }
 
@@ -616,7 +624,6 @@ function renderStep() {
   feedbackEl.classList.remove("fail");
   userInputEl.value = "";
   resetPostSubmitUI();
-  window.speechSynthesis.cancel();
   window.setTimeout(() => speakNPC(step.npc), 120);
 }
 
