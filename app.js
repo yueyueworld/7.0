@@ -624,7 +624,6 @@ function renderStep() {
   feedbackEl.classList.remove("fail");
   userInputEl.value = "";
   resetPostSubmitUI();
-  window.setTimeout(() => speakNPC(step.npc), 120);
 }
 
 function typewriterOnly(full) {
